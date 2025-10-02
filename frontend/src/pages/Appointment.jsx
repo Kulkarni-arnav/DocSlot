@@ -101,6 +101,7 @@ const Appointment = () => {
       toast.warning('Login to book an appointment');
       return navigate('/login')
     }
+  
 
     try {
       const date = docSlots[slotIndex][0].datetime;
