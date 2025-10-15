@@ -2,6 +2,7 @@ import { createContext } from "react";
 import { useState } from "react";
 import axios from "axios";
 import {toast} from 'react-toastify'
+import { set } from "mongoose";
 
 
 export const DoctorContext =createContext()
@@ -11,6 +12,7 @@ const DoctorContextProvider =(props)=>{
     const backendUrl = import.meta.env.VITE_BACKEND_URL
     const [dToken, setDToken] =useState(localStorage.getItem('dToken')?localStorage.getItem('dToken'):'')
     const [appointments, setAppointments] =useState([])
+    const [dashData, setDashData] =useState(false)
 
     const getAppointments = async()=>{
         try {
@@ -59,8 +61,25 @@ const DoctorContextProvider =(props)=>{
         }
     }
 
+    const getDashData = async()=>{
+        try {
+            const {data} = await axios.get(backendUrl+ '/api/doctor/dashboard',{headers:{dToken}})
+            if(data.success){
+                setDashData(data.dashData)
+                console.log(data.dashData);
+                
+            }else{
+                toast.error(data.message)
+            }
+        } catch (error) {
+            console.log(error);
+            toast.error(error.message)
+        }
+    }
+
+
     const value ={
-        dToken, setDToken, backendUrl, appointments, getAppointments, setAppointments, completeAppointment, cancelAppointment
+        dToken, setDToken, backendUrl, appointments, getAppointments, setAppointments, completeAppointment, cancelAppointment, dashData, getDashData,setDashData
     }
     return <DoctorContext.Provider value={value}>
         {props.children}
