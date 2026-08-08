@@ -13,7 +13,7 @@ const AddDoctor = () => {
     const [password,setPassword] = useState('')
     const [experience,setExperience] = useState('1 Year')
     const [fees,setFees] = useState('')
-    const [speciality,setSpeciality] = useState('General Physician')
+    const [speciality,setSpeciality] = useState('General physician')
     const [address1,setAddress1] = useState('')
     const [address2,setAddress2] = useState('')
     const [about,setAbout] = useState('')
@@ -55,7 +55,9 @@ const AddDoctor = () => {
                     setName('')
                     setEmail('')
                     setPassword('')
+                    setExperience('1 Year')
                     setFees('')
+                    setSpeciality('General physician')
                     setAddress1('')
                     setAddress2('')
                     setAbout('')
@@ -126,7 +128,7 @@ const AddDoctor = () => {
                     <div className='flex-1 flex flex-col gap-1'>
                         <p>Speciality</p>
                         <select onChange={(e)=>setSpeciality(e.target.value)} value={speciality} className='px-3 py-2 border rounded' name="" id="speciality">
-                            <option value="General Physician">General Physician</option>
+                            <option value="General physician">General physician</option>
                             <option value="Gynecologist">Gynecologist</option>
                             <option value="Dermatologist">Dermatologist</option>
                             <option value="Pediatricians">Pediatricians</option>

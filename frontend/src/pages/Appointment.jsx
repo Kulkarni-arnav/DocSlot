@@ -21,7 +21,8 @@ const Appointment = () => {
   const fetchDocInfo = async () => {
     const docInfo = doctors.find(doc => doc._id === docId);
     setDocInfo(docInfo);
-   
+    setSlotIndex(0);
+    setSlotTime('');
   }
 
 
@@ -48,8 +49,21 @@ const Appointment = () => {
       //setting hours 
 
       if(today.getDate()=== currentDate.getDate()){
-        currentDate.setHours(currentDate.getHours() > 10 ? currentDate.getHours()+1 : 10);
-        currentDate.setMinutes(currentDate.getMinutes() > 30 ?  30 : 0);
+        let hours = currentDate.getHours();
+        let minutes = currentDate.getMinutes();
+
+        if(hours < 10){
+          hours = 10;
+          minutes = 0;
+        } else if(minutes < 30){
+          minutes = 30;
+        } else {
+          hours += 1;
+          minutes = 0;
+        }
+
+        currentDate.setHours(hours);
+        currentDate.setMinutes(minutes);
       }else{
         currentDate.setHours(10)
         currentDate.setMinutes(0);
@@ -102,6 +116,16 @@ const Appointment = () => {
       return navigate('/login')
     }
   
+
+    if(!docSlots[slotIndex] || docSlots[slotIndex].length === 0){
+      toast.warning('No slots available on this day');
+      return;
+    }
+
+    if(!slotTime){
+      toast.warning('Please select a time slot');
+      return;
+    }
 
     try {
       const date = docSlots[slotIndex][0].datetime;

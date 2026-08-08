@@ -6,6 +6,7 @@ import doctorModel from "../models/doctorModel.js";
 import jwt from "jsonwebtoken";
 import appointmentModel from "../models/appointmentModel.js";
 import userModel from "../models/userModel.js";
+import fs from "fs";
 
 
 
@@ -19,7 +20,7 @@ const addDoctor = async (req, res) => {
 
         //checking for all data to add doctor
 
-        if (!name || !email || !password || !speciality || !experience || !degree || !about || !fees || !address || !imageFile) {
+        if (!name || !email || !password || !speciality || !experience || !degree || !about || fees===undefined || fees===null || fees==='' || !address || !imageFile) {
             return res.json({ success:false,message: "Please fill all fields" });
             
         }
@@ -44,6 +45,7 @@ const addDoctor = async (req, res) => {
         //upload image to cloudinary
         const imageUpload = await cloudinary.uploader.upload(imageFile.path, {resource_type: "image"});
         const imageUrl = imageUpload.secure_url;
+        fs.unlink(imageFile.path, ()=>{});
 
         const doctorData = {
             name,
@@ -66,6 +68,9 @@ const addDoctor = async (req, res) => {
 
     } catch (error) {
         console.log(error);
+        if(error.code === 11000){
+            return res.json({ success:false, message: "Email already registered" });
+        }
         res.json({ success:false, message: error.message });
     }
 }
@@ -75,7 +80,7 @@ const loginAdmin = async (req, res) => {
     try {
         const {email,password} = req.body;
         if(email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD){
-            const token = jwt.sign(email+password,process.env.JWT_SECRET);
+            const token = jwt.sign({email},process.env.JWT_SECRET,{expiresIn:'1d'});
             res.json({success:true,token});
         }else{
             res.json({success:false,message:"Invalid Credentials" });
@@ -115,18 +120,18 @@ const appointmentsAdmin = async (req, res) => {
 const appointmentCancel = async (req ,res)=>{
     try { 
         const {appointmentId} = req.body;
-        
+
         const appointmentData = await appointmentModel.findById(appointmentId);
 
+        if(!appointmentData){
+            return res.json({success:false ,message : "Appointment not found"});
+        }
 
         await appointmentModel.findByIdAndUpdate(appointmentId , {cancelled: true});
 
         //releasing doctors slot
         const {docId , slotDate , slotTime} = appointmentData;
-        const docData = await doctorModel.findById(docId)
-        let slots_booked = docData.slots_booked;
-        slots_booked[slotDate] = slots_booked[slotDate].filter(e =>e !== slotTime);
-        await doctorModel.findByIdAndUpdate(docId , {slots_booked})
+        await doctorModel.findByIdAndUpdate(docId , { $pull: { [`slots_booked.${slotDate}`]: slotTime } });
 
         res.json({success:true ,message : "Appointment cancelled successfully"})
     } catch (error) {

@@ -2,7 +2,6 @@ import { useState } from "react";
 import { createContext } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { set } from "mongoose";
 
 export const AdminContext =createContext()
 
@@ -94,6 +93,7 @@ const AdminContextProvider =(props)=>{
         setAToken,
         backendUrl,
         doctors,
+        setDoctors,
         getAllDoctors,
         changeAvailability,
         appointments,
@@ -101,6 +101,7 @@ const AdminContextProvider =(props)=>{
         getAllAppointments,
         cancelAppointment,
         dashData,
+        setDashData,
         getDashData
     }
     return <AdminContext.Provider value={value}>

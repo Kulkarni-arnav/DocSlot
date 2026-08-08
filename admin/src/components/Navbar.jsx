@@ -6,17 +6,27 @@ import { DoctorContext } from '../context/DoctorContext'
 
 const Navbar = () => {
 
-    const {aToken,setAToken} = useContext(AdminContext)
-    const {dToken,setDToken} = useContext(DoctorContext)
+    const {aToken,setAToken,setDoctors,setAppointments:setAdminAppointments,setDashData:setAdminDashData} = useContext(AdminContext)
+    const {dToken,setDToken,setAppointments:setDoctorAppointments,setDashData:setDoctorDashData,setProfileData} = useContext(DoctorContext)
 
     const navigate = useNavigate()
 
     const logout =()=>{
         navigate('/')
-        aToken && setAToken('')
-        aToken && localStorage.removeItem('aToken')
-        dToken && setDToken('')
-        dToken && localStorage.removeItem('dToken')
+        if(aToken){
+            setAToken('')
+            localStorage.removeItem('aToken')
+            setDoctors([])
+            setAdminAppointments([])
+            setAdminDashData(false)
+        }
+        if(dToken){
+            setDToken('')
+            localStorage.removeItem('dToken')
+            setDoctorAppointments([])
+            setDoctorDashData(false)
+            setProfileData(false)
+        }
     }
 
   return (

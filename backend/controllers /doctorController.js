@@ -8,6 +8,9 @@ const changeAvailability = async (req, res) => {
         const {docId} = req.body;
 
         const docData = await doctorModel.findById(docId);
+        if(!docData){
+            return res.json({ success:false, message: "Doctor not found" });
+        }
         await doctorModel.findByIdAndUpdate(docId, {available: !docData.available});
         res.json({ success:true,message: "Doctor availability changed successfully" });
     } catch (error) {
@@ -40,7 +43,7 @@ const loginDoctor = async (req, res) => {
 
         const isMatch = await bcrypt.compare(password, doctor.password);
         if(isMatch){
-            const token = jwt.sign({id: doctor._id}, process.env.JWT_SECRET);
+            const token = jwt.sign({id: doctor._id}, process.env.JWT_SECRET, {expiresIn:'7d'});
             res.json({ success:true, token });
         }else{
             res.json({ success:false, message: "Invalid credentials" });
@@ -74,7 +77,7 @@ const appointmentComplete = async (req, res) => {
         const docId = req.docId; //const {docId} = req.body;
         const {appointmentId} = req.body;
         const appointmentData = await appointmentModel.findById(appointmentId);
-        if(appointmentData && appointmentData.docId == docId){
+        if(appointmentData && appointmentData.docId === docId){
             await appointmentModel.findByIdAndUpdate(appointmentId, {isCompleted: true});
             res.json({ success:true, message: "Appointment completed" });
         } else{
@@ -94,8 +97,13 @@ const appointmentCancel = async (req, res) => {
         const docId = req.docId; //const {docId} = req.body;
         const {appointmentId} = req.body;
         const appointmentData = await appointmentModel.findById(appointmentId);
-        if(appointmentData && appointmentData.docId == docId){
+        if(appointmentData && appointmentData.docId === docId){
             await appointmentModel.findByIdAndUpdate(appointmentId, {cancelled: true});
+
+            //releasing doctors slot
+            const {slotDate, slotTime} = appointmentData;
+            await doctorModel.findByIdAndUpdate(docId, { $pull: { [`slots_booked.${slotDate}`]: slotTime } });
+
             res.json({ success:true, message: "Appointment cancelled" });
         } else{
             res.json({ success:false, message: "Cancellation failed"});
@@ -114,7 +122,7 @@ const doctorDashboard = async (req, res) => {
         const appointments = await appointmentModel.find({docId});
         let earnings = 0;
         appointments.map((item)=>{
-            if(item.isCompleted || item.payment){
+            if(!item.cancelled && (item.isCompleted || item.payment)){
                 earnings += item.amount;
             }
 
